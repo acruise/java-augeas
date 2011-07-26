@@ -338,7 +338,9 @@ public class Augeas {
      */
     protected void processLastCall(String message) {
         if (raiseExceptions && lastReturn == -1) {
-            throw new AugeasException(message);
+            final String err = lastErrorMessage() != null ? (": " + lastErrorMessage()) : "";
+            final String details = lastErrorDetails() != null ? (": " + lastErrorDetails()) : "";
+            throw new AugeasException(message + err + details);
         }
     }
 
@@ -402,6 +404,32 @@ public class Augeas {
         return lastReturn;
     }
 
+    public SpanResult span(String path) {
+        check();
+
+        final PointerByReference filename = new PointerByReference();
+        final IntByReference labelStart = new IntByReference();
+        final IntByReference labelEnd   = new IntByReference();
+        final IntByReference valueStart = new IntByReference();
+        final IntByReference valueEnd   = new IntByReference();
+        final IntByReference spanStart  = new IntByReference();
+        final IntByReference spanEnd    = new IntByReference();
+
+        lastReturn = AugLib.aug_span(aug, path, filename, labelStart, labelEnd, valueStart, valueEnd, spanStart, spanEnd);
+
+        processLastCall("span failed");
+
+        return new SpanResult(
+                filename.getValue().getString(0),
+                labelStart.getValue(),
+                labelEnd.getValue(),
+                valueStart.getValue(),
+                valueEnd.getValue(),
+                spanStart.getValue(),
+                spanEnd.getValue()
+        );
+    }
+
     /**
      * sets if exceptions should be raised
      */
@@ -411,7 +439,7 @@ public class Augeas {
 
     /**
      * Add a transform under <tt>/augeas/load</tt>
-     * 
+     *
      * @param lens
      *            the lens to use
      * @param name

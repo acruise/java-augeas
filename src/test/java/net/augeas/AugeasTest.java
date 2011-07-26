@@ -1,8 +1,8 @@
 package net.augeas;
 
-import java.util.List;
-
 import junit.framework.TestCase;
+
+import java.util.List;
 
 public class AugeasTest extends TestCase {
 
@@ -71,4 +71,22 @@ public class AugeasTest extends TestCase {
             // Good.
         }
     }
+
+    // TODO find some way to make this test more portable!!
+    public void testSpan() {
+        Augeas aug = new Augeas();
+        aug.set("/augeas/span","enable"); // TODO consider an alternate constructor that does this for us
+        aug.rm("/files");
+        aug.load();
+
+        SpanResult got = aug.span("/files/etc/passwd[1]");
+        assertEquals("/etc/passwd", got.getFilename());
+        assertEquals(0, got.getValueStart());
+        assertEquals(0, got.getValueEnd());
+        assertEquals(0, got.getSpanStart());
+        assertTrue(got.getSpanEnd() > 0);
+        assertEquals(0, got.getLabelStart());
+        assertEquals(0, got.getLabelEnd());
+    }
+
 }
