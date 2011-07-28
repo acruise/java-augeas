@@ -22,17 +22,17 @@
 
 package net.augeas;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import net.augeas.jna.Aug;
-import net.augeas.jna.AugPointer;
-
 import com.sun.jna.Native;
 import com.sun.jna.Pointer;
 import com.sun.jna.StringArray;
 import com.sun.jna.ptr.IntByReference;
 import com.sun.jna.ptr.PointerByReference;
+import net.augeas.jna.Aug;
+import net.augeas.jna.AugPointer;
+
+import java.util.ArrayList;
+import java.util.List;
+
 
 /**
  * Public Augeas API.
@@ -78,7 +78,12 @@ public class Augeas {
     public static int NO_MODL_AUTOLOAD = (1 << 6);
 
     /**
-     * Pointert to he active augeas instance.
+     * Enable span on load
+     */
+    public static int AUG_ENABLE_SPAN = (1 << 7);
+
+    /**
+     * Pointer to the active augeas instance.
      */
     protected AugPointer aug;
 
@@ -129,7 +134,7 @@ public class Augeas {
 
     protected void check() {
         if (aug == null) {
-            throw new AugeasException("Augues connection closed");
+            throw new AugeasException("Augeas connection closed");
         }
     }
 
@@ -407,26 +412,27 @@ public class Augeas {
     public SpanResult span(String path) {
         check();
 
-        final PointerByReference filename = new PointerByReference();
-        final IntByReference labelStart = new IntByReference();
-        final IntByReference labelEnd   = new IntByReference();
-        final IntByReference valueStart = new IntByReference();
-        final IntByReference valueEnd   = new IntByReference();
-        final IntByReference spanStart  = new IntByReference();
-        final IntByReference spanEnd    = new IntByReference();
+        final PointerByReference pRefFilename = new PointerByReference();
+        final IntByReference     pLabelStart  = new IntByReference();
+        final IntByReference     pLabelEnd    = new IntByReference();
+        final IntByReference     pValueStart  = new IntByReference();
+        final IntByReference     pValueEnd    = new IntByReference();
+        final IntByReference     pSpanStart   = new IntByReference();
+        final IntByReference     pSpanEnd     = new IntByReference();
 
-        lastReturn = AugLib.aug_span(aug, path, filename, labelStart, labelEnd, valueStart, valueEnd, spanStart, spanEnd);
+        lastReturn = AugLib.aug_span(aug, path, pRefFilename, pLabelStart, pLabelEnd, pValueStart, pValueEnd, pSpanStart, pSpanEnd);
 
         processLastCall("span failed");
 
+        final Pointer pFilename = pRefFilename.getValue();
         return new SpanResult(
-                filename.getValue().getString(0),
-                labelStart.getValue(),
-                labelEnd.getValue(),
-                valueStart.getValue(),
-                valueEnd.getValue(),
-                spanStart.getValue(),
-                spanEnd.getValue()
+                pFilename != null ? pFilename.getString(0) : "",
+                pLabelStart.getValue(),
+                pLabelEnd.getValue(),
+                pValueStart.getValue(),
+                pValueEnd.getValue(),
+                pSpanStart.getValue(),
+                pSpanEnd.getValue()
         );
     }
 
